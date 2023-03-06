@@ -1,0 +1,511 @@
+<html lang="es">
+
+<head>
+  <title>Linea de tiempo</title>
+
+  <!-- for mobile devices like android and iphone -->
+  <meta content="True" name="HandheldFriendly" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <link rel="icon" href="./img/16/logoPrincipal.ico" type="image/x-icon">
+
+  <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+    crossorigin="anonymous"></script>
+  <script type="text/javascript" src="./js/timeline.js"></script>
+  <!-- tabla to excel -->
+  <script src="//cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js"
+    integrity="sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.min.js"
+    integrity="sha384-kjU+l4N0Yf4ZOJErLsIcvOU2qSb74wXpOhqTvwVx3OElZRweTnQ6d31fXEoRD1Jy"
+    crossorigin="anonymous"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous" />
+  <link rel="stylesheet" href="./examples/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.0/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="./css/timeline.css" />
+
+  <style type="text/css">
+    /* Styles for the page */
+    html,
+    body {
+      font: 10pt arial;
+    }
+
+    #mytimeline {}
+
+    #new {
+      position: absolute;
+      left: 25px;
+      top: 8px;
+
+      text-transform: uppercase;
+      color: rgb(36, 33, 33);
+      font-weight: bold;
+      font-size: 40px;
+      text-decoration: none;
+    }
+
+    /* Custom styles for the Timeline 5D99C3*/
+    div.timeline-frame {
+      /*border-color: #5D99C3;*/
+      border-color: #e66611;
+      border-radius: 5px;
+      -moz-border-radius: 5px;
+      /* For Firefox 3.6 and older */
+    }
+
+    div.timeline-axis {
+      border-color: #e66611;
+
+      background-color: #e66611;
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#5D99C3', endColorstr='#3A6DA0');
+      /* for IE */
+      background: -webkit-gradient(linear,
+          left top,
+          left bottom,
+          from(#e66611),
+          to(#ee9357));
+      /* for webkit browsers */
+      background: -moz-linear-gradient(top,
+          #5d99c3,
+          #3a6da0);
+      /* for firefox 3.6+ */
+    }
+
+    /* #5d99c3; */
+    div.timeline-axis-grid {}
+
+    div.timeline-groups-axis {
+      border-color: #5d99c3;
+    }
+
+    div.timeline-axis-text {
+      color: white;
+    }
+
+    div.timeline-groups-text {
+      color: #4d4d4d;
+    }
+
+    div.timeline-event {
+      color: rgb(15, 15, 15);
+      border-radius: 5px;
+    }
+
+    div.timeline-event-content {
+      padding: 5px;
+    }
+
+    div.unavailable {
+      background-color: #f03030;
+      /* red */
+      border-color: #bd2828;
+      /* red */
+    }
+
+    div.available {
+      background-color: #1aa11a;
+      /* green */
+      border-color: #136e13;
+      /* green */
+    }
+
+    div.maybe {
+      background-color: #ffa500;
+      /* orange */
+      border-color: #cc8100;
+      /* orange */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <div id="mytimeline"></div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group">
+          <input style="display: inline; width: 500px" class="form-control form-control-lg" id="fileupload" type="file"
+            name="files[]" style="width: 900px" />
+          <button id="btnExportar" class="btn btn-success" style="display: inline; float: right">
+            Exportar a excel
+          </button>
+        </div>
+
+        <div class="table-sm table-responsive table-wrapper">
+          <table id="tblItems" class="table table-dark table2excel">
+            <thead>
+              <tr>
+                <th>Nº</th>
+                <th>ETA</th>
+                <th>COMPAÑÍA</th>
+                <th>VUELO LLEGADA</th>
+                <th>ORIGEN</th>
+                <th>POSICIÓN</th>
+                <th>TIPO AVIÓN</th>
+                <th>ETD</th>
+                <th>VUELO SALIDA</th>
+                <th>DESTINO</th>
+                <th>SALA</th>
+                <th>BANDA</th>
+                <th>SERVICIO</th>
+              </tr>
+            </thead>
+            <tbody id="tablaDatos"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-sm-2">
+        <table class="table table-dark" style="border: 1px solid black; width: 100px;">
+          <thead>
+            <tr>
+              <th style="font-weight: bold; font-size: 20px">Aerolínea</th>
+              <th style="font-weight: bold; font-size: 20px">N° vuelos</th>
+            </tr>
+          </thead>
+          <tbody id="tablaAerolineas">
+
+            <tr>
+              <td style="font-weight: bold; font-size: 20px"><img src="./img/aviancaLogo.png"
+                  style="width: 100px; height: 50px; object-fit: fill;" alt=""></td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; font-size: 20px"><img src="./img/latamLogo.png"
+                  style="width: 100px; height: 50px; object-fit: fill;" alt=""></td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+            </tr>
+
+            <tr>
+              <td style="font-weight: bold; font-size: 20px"><img src="./img/vivaLogo.jpg"
+                  style="width: 100px; height: 50px; object-fit: fill;" alt=""></td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; font-size: 20px"><img src="./img/UltraLogo.png"
+                  style="width: 100px; height: 50px; object-fit: fill;" alt=""></td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+            </tr>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; font-size: 20px"><img src="./img/Wingo_Logo.jpg"
+                  style="width: 100px; height: 50px; object-fit: fill;" alt=""></td>
+              <td style="
+                  font-weight: bold;
+                  font-size: 25px;
+                  background-color: white;
+                  color: black;
+                ">
+                0
+              </td>
+            </tr>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; font-size: 20px"><img src="./img/copaLogo.png"
+                  style="width: 100px; height: 50px; object-fit: fill;" alt=""></td>
+              <td style="
+                font-weight: bold;
+                font-size: 25px;
+                background-color: white;
+                color: black;
+              ">
+                0
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+      </div>
+      <div class="col-sm-3">
+        <table class="table table-dark" style="border: 1px solid black">
+          <thead>
+            <tr>
+              <th style="font-weight: bold; font-size: 30px">Posiciones</th>
+              <th style="font-weight: bold; font-size: 30px">P1</th>
+              <th style="font-weight: bold; font-size: 30px">P2</th>
+              <th style="font-weight: bold; font-size: 30px">P3</th>
+              <th style="font-weight: bold; font-size: 30px">P4</th>
+              <th style="font-weight: bold; font-size: 30px">P5</th>
+              <th style="font-weight: bold; font-size: 30px">R6</th>
+              <th style="font-weight: bold; font-size: 30px">HP</th>
+            </tr>
+          </thead>
+          <tbody id="Nvuelos">
+            <tr>
+              <th style="font-weight: bold; font-size: 20px">
+                Cantidad vuelos
+              </th>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+              <td style="
+                    font-weight: bold;
+                    font-size: 25px;
+                    background-color: white;
+                    color: black;
+                  ">
+                0
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- tabla aerolineas -->
+        <table class="table table-dark" style="border: 1px solid black; ">
+          <thead>
+            <tr>
+              <th style="font-weight: bold; font-size: 20px;width: 100px;"> Total vuelos</th>
+              <th style="font-weight: bold; font-size: 20px;width: 250px;"> Para verificar bandas</th>
+
+            </tr>
+          </thead>
+          <tbody id="cantidadVuelos">
+            <tr>
+
+              <td style="
+                    font-weight: bold;
+                    font-size: 30px;
+                    background-color: white;
+                    color: black;
+                   
+                          justify-content: center;
+                          align-items: center;
+                  ">
+                0
+              </td>
+              <td>
+                <ol id="bandasError" style="list-style: none">
+                  <li></li>
+                </ol>
+              </td>
+
+            </tr>
+          </tbody>
+
+        </table>
+
+        <!-- <img class="img-fluid" style="max-resolution: 200px; width: 200px; height: 200px;" src="./img/16/aerooriente.png" alt="" srcset=""> -->
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalVuelos" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalVuelos">Datos del vuelo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="mb-3">
+                    <label for="vueloLlegada" class="form-label">VUELO LLEGADA</label>
+                    <input type="text" class="form-control" id="vueloLlegada" />
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="mb-3">
+                    <label for="" class="form-label">ESTADO DE VUELO</label>
+                    <select class="form-control" name="" id="estadoVueloLlegada">
+                      <option value="Itinerario">Itinerario</option>
+                      <option value="En sala">En sala</option>
+                      <option value="Abordo">Abordo</option>
+                      <option value="Cerrado">Cerrado</option>
+                      <option value="Demorado">Demorado</option>
+                      <option value="Demorado">Salió</option>
+                      <option value="Demorado">Cancelado</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="mb-3">
+                    <label for="vueloSalida" class="form-label">VUELO SALIDA</label>
+                    <input type="text" class="form-control" id="vueloSalida" />
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="mb-3">
+                    <label for="posicion" class="form-label">ESTADO DE VUELO SALIDA</label>
+                    <select class="form-control" name="" id="estadoVueloSalida">
+                      <option value="Itinerario">Itinerario</option>
+                      <option value="En sala">Aterrizó</option>
+                      <option value="Demorado">Cancelado</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="mb-3">
+                    <label for="horaLlegada" class="form-label">HORA LLEGADA</label>
+                    <input type="text" class="form-control" id="horaLlegada" />
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="mb-3">
+                    <label for="horaLlegada" class="form-label">HORA LLEGADA REAL</label>
+                    <input type="text" class="form-control" id="horaLlegadaReal" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-sm-6">
+                  <div class="mb-3">
+                    <label for="horaSalida" class="form-label">HORA SALIDA</label>
+                    <input type="text" class="form-control" id="horaSalida" />
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="mb-3">
+                    <label for="horaSalida" class="form-label">HORA SALIDA REAL</label>
+                    <input type="text" class="form-control" id="horaSalidaReal" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label style="color: blue" for="posicion" class="form-label">posicion</label>
+                <select class="form-control" name="" id="posicion">
+                  <option value="P1">P1</option>
+                  <option value="P2">P2</option>
+                  <option value="P3">P3</option>
+                  <option value="P4">P4</option>
+                  <option value="P5">P5</option>
+                  <option value="R6">R6</option>
+                  <option value="HP">HP</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label style="color: blue" for="sala" class="form-label">SALA</label>
+                <select class="form-control" name="" id="sala">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="PERN">PERN</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label style="color: blue" for="banda" class="form-label">BANDA</label>
+                <select class="form-control" name="" id="banda">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="origen" class="form-label">ORIGEN</label>
+                <input type="text" class="form-control" id="origen" style="text-transform: uppercase" />
+              </div>
+              <div class="mb-3">
+                <label for="destino" class="form-label">DESTINO</label>
+                <input type="text" class="form-control" id="destino" style="text-transform: uppercase" />
+                <input type="hidden" class="form-control" id="idFila" />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Cerrar
+            </button>
+            <button id="btnGuardarEdicion" type="button" class="btn btn-primary">
+              Guardar Cambios
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="./js/funciones.js"></script>
+</body>
+
+</html>
